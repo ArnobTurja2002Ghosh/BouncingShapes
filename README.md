@@ -8,4 +8,4 @@ The library folder (lib and include folders) are not included in this repository
 
 GUI under development.
 
-Looking for suggestion: How should a shape behave if it is spawned outside the border of the window? For the time being, the shape just vibrates.
+Assuming that (in the config file) every shape is within the bounds of the window.
