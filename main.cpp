@@ -9,7 +9,7 @@ class AShape {       // The class
 public:             // Access specifier
     sf::CircleShape circle;        // Attribute (int variable)
     sf::RectangleShape rectangle;  // Attribute (string variable)
-    float speedX,speedY;
+    float speed[2];
     sf::Text name;
     AShape() {
     }
@@ -25,7 +25,8 @@ int main()
     std::string temp;
     int characterSize, textR, textG, textB;
     std::vector<AShape> circles;
-
+    std::vector<const char*> shapeNames;
+    
     while (fin >> temp) {
         if (temp.compare("Window") == 0) {
             int windowWidth, windowHeight;
@@ -51,14 +52,17 @@ int main()
             circle1.name.setFillColor(sf::Color(textR, textG, textB));
             circle1.name.setStyle(sf::Text::Bold | sf::Text::Underlined);
             circle1.name.setOrigin(circle1.name.getLocalBounds().width / 2.f + circle1.name.getLocalBounds().left, circle1.name.getLocalBounds().height / 2.f + circle1.name.getLocalBounds().top);
-            
+            char* char_array = new char[sizeof temp];
+            strcpy_s(char_array, sizeof temp, temp.c_str());
+            shapeNames.push_back(char_array);
+
             int temp1, temp2;
             fin >> temp1 >> temp2;
             circle1.circle.setPosition(temp1, temp2); // Center circle
             std::cout << temp1 << temp2;
             fin >> temp1 >> temp2;
-            circle1.speedX = temp1;
-            circle1.speedY = temp2;
+            circle1.speed[0] = temp1;
+            circle1.speed[1] = temp2;
 
             int temp3;
             fin >> temp1 >> temp2>>temp3;
@@ -72,7 +76,7 @@ int main()
 
             fin >> temp3;
             circle1.circle.setRadius(temp3);
-            circle1.circle.setOrigin(temp3, temp3);
+            //circle1.circle.setOrigin(temp3, temp3);
             
             
             // select the font
@@ -90,14 +94,17 @@ int main()
             circle1.name.setFillColor(sf::Color(textR, textG, textB));
             circle1.name.setStyle(sf::Text::Bold | sf::Text::Underlined);
             circle1.name.setOrigin(circle1.name.getLocalBounds().width / 2.f + circle1.name.getLocalBounds().left, circle1.name.getLocalBounds().height / 2.f + circle1.name.getLocalBounds().top);
+            char* char_array = new char[sizeof temp];
+            strcpy_s(char_array, sizeof temp, temp.c_str());
+            shapeNames.push_back(char_array);
 
             int temp1, temp2;
             fin >> temp1 >> temp2;
             circle1.rectangle.setPosition(temp1, temp2); // Center circle
             std::cout << temp1 << temp2;
             fin >> temp1 >> temp2;
-            circle1.speedX = temp1;
-            circle1.speedY = temp2;
+            circle1.speed[0] = temp1;
+            circle1.speed[1] = temp2;
 
             int temp3;
             fin >> temp1 >> temp2 >> temp3;
@@ -111,7 +118,7 @@ int main()
 
             fin >> temp1>>temp2;
             circle1.rectangle.setSize(sf::Vector2f(temp1, temp2));
-            circle1.rectangle.setOrigin(temp1/2, temp2/2);
+            //circle1.rectangle.setOrigin(temp1/2, temp2/2);
 
 
             // select the font
@@ -120,16 +127,13 @@ int main()
             circles.push_back(circle1);
         }
     }
-    
+
+    //const char* items[circles.size()];
     window.setFramerateLimit(60);
     ImGui::SFML::Init(window);
 
-    
-    
-       
-
     bool circleExists = true;
-    float circleRadius = 50.0f;
+    float circleScale = 1.0f;
     int circleSegments = 100;
     float circleColor[3] = { (float)0 / 255, (float)255 / 255, (float)0 / 255 };
 
@@ -141,6 +145,9 @@ int main()
     sf::Clock deltaClock;
     ImGui::GetStyle().ScaleAllSizes(1.0f);
 
+    static int item_current = 0;
+
+
     while (window.isOpen())
     {
         sf::Event event;
@@ -151,12 +158,15 @@ int main()
                 window.close();
         }
         ImGui::SFML::Update(window, deltaClock.restart());
+        ImGui::ShowDemoWindow();
         //edw.is
         ImGui::Begin("Window title");
         ImGui::Text("Window text!");
+        ImGui::Combo("combo3", &item_current, shapeNames.data(), shapeNames.size());
         ImGui::Checkbox("Circle", &circleExists);
-        ImGui::SliderFloat("Radius", &circleRadius, 50.0f, 100.0f);
+        ImGui::SliderFloat("Scale", &circleScale, 0.0f, 4.0f);
         ImGui::SliderInt("Sides", &circleSegments, 3, 150);
+        ImGui::SliderFloat2("velocity", circles[item_current].speed, -8, 8);
         ImGui::ColorEdit3("Color Circle", circleColor);
         
         ImGui::InputText("Text", displayString, 255);
@@ -171,30 +181,34 @@ int main()
             std::string name_string = c.name.getString();
             if (name_string[0] == 'C') {
             
-                c.circle.setPosition(c.circle.getPosition().x + c.speedX, c.circle.getPosition().y + c.speedY);
-                std::cout << c.circle.getPosition().x << c.circle.getPosition().y << "\n";
-                c.name.setPosition(c.circle.getPosition());
+                c.circle.setPosition(c.circle.getPosition().x + c.speed[0], c.circle.getPosition().y + c.speed[1]);
+                //std::cout << c.circle.getPosition().x << c.circle.getPosition().y << "\n";
+                //c.name.setPosition(c.circle.getPosition()+sf::Vector2f(c.circle.getRadius(), c.circle.getRadius())*c.circle.getScale().x);
+                c.name.setPosition(sf::Vector2f(c.circle.getGlobalBounds().left + c.circle.getGlobalBounds().width / 2, c.circle.getGlobalBounds().top + c.circle.getGlobalBounds().height / 2));
 
-                if (c.circle.getPosition().x + c.circle.getRadius() >= window.getSize().x || c.circle.getPosition().x - c.circle.getRadius() <= 0) {
-                    c.speedX *= -1;
+                if (c.circle.getPosition().x + c.circle.getRadius()*2*c.circle.getScale().x >= window.getSize().x || c.circle.getPosition().x <= 0) {
+                    c.speed[0] *= -1;
                 }
-                if (c.circle.getPosition().y + c.circle.getRadius() >= window.getSize().y || c.circle.getPosition().y - c.circle.getRadius() <= 0) {
-                    c.speedY *= -1;
+                if (c.circle.getPosition().y + c.circle.getRadius()*2* c.circle.getScale().y >= window.getSize().y || c.circle.getPosition().y <= 0) {
+                    c.speed[1] *= -1;
                 }
+                
             }
             else if (name_string[0] == 'R') {
-                c.rectangle.setPosition(c.rectangle.getPosition().x + c.speedX, c.rectangle.getPosition().y + c.speedY);
-                c.name.setPosition(c.rectangle.getPosition());
-                if (c.rectangle.getPosition().x + c.rectangle.getSize().x/2 >= window.getSize().x || c.rectangle.getPosition().x - c.rectangle.getSize().x / 2 <= 0) {
-                    c.speedX *= -1;
+                c.rectangle.setPosition(c.rectangle.getPosition().x + c.speed[0], c.rectangle.getPosition().y + c.speed[1]);
+                //c.name.setPosition(c.rectangle.getPosition() + c.rectangle.getSize()/2.0f * c.rectangle.getScale().x);
+                c.name.setPosition(sf::Vector2f(c.rectangle.getGlobalBounds().left + c.rectangle.getGlobalBounds().width / 2, c.rectangle.getGlobalBounds().top + c.rectangle.getGlobalBounds().height / 2));
+                if (c.rectangle.getPosition().x + c.rectangle.getSize().x * c.rectangle.getScale().x >= window.getSize().x || c.rectangle.getPosition().x <= 0) {
+                    c.speed[0] *= -1;
                 }
-                if (c.rectangle.getPosition().y + c.rectangle.getSize().y / 2 >= window.getSize().y || c.rectangle.getPosition().y - c.rectangle.getSize().y / 2 <= 0) {
-                    c.speedY *= -1;
+                if (c.rectangle.getPosition().y + c.rectangle.getSize().y * c.rectangle.getScale().y >= window.getSize().y || c.rectangle.getPosition().y <= 0) {
+                    c.speed[1] *= -1;
                 }
             }
         }
 
-        
+        circles[item_current].circle.setScale(circleScale, circleScale);
+        circles[item_current].rectangle.setScale(circleScale, circleScale);
         //text.setPosition(shape.getPosition().x, shape.getPosition().y);
         
 
