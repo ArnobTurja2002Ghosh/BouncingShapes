@@ -9,3 +9,11 @@ The library folder (lib and include folders) are not included in this repository
 GUI under development.
 
 Assuming that (in the config file) every shape is within the bounds of the window.
+
+The ImGUI user interface is able to:
+- List all the shapes and select any one of them to edit their properties
+- Toggle whether or not the selected shape will be drawn.
+- Change the scale of the shape (0 to 4).
+- Change the x and y velocity of the shape (-8 to 8).
+- Change the color of the shape.
+- Change the name of the shape.
